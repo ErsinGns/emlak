@@ -1,0 +1,59 @@
+services:
+  app:
+    build:
+      context: ./api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api:/app
+      - txt_data:/app/txt_files
+    environment:
+      FLASK_DEBUG: 1
+    command: /bin/sh -c "sleep 10 && flask run -h 0.0.0.0"
+    depends_on:
+      - db_eml
+      - db_kul
+
+
+  db_update:
+    build:
+      context: ./databases
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: /bin/sh -c "sleep 10 && python3 app.py"
+    depends_on:
+      - db_eml
+      - db_kul
+
+
+  db_eml:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: eml
+    volumes:
+      - db_data_eml:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  db_kul:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: kul
+    volumes:
+      - db_data_kul:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data_eml:
+  db_data_kul:
+  txt_data:
